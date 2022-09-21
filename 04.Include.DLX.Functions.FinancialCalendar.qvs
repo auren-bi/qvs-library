@@ -1,0 +1,40 @@
+SUB FinancialCalendar(vDLX.Calendar.DateFrom,vDLX.Calendar.DateTo,vDLX.Calendar.TableName)
+	
+    "$(vDLX.Calendar.TableName)":
+    Load Distinct
+         Year("$(vDLX.Calendar.Date)") As Year, 
+         Num(Month("$(vDLX.Calendar.Date)"),'00') As Month, 
+	    Date(MonthStart("$(vDLX.Calendar.Date)"),'MM YYYY') as YearMonth,
+         if("$(vDLX.Calendar.Date)" < MonthStart(Today()),1,0) as ClosedPeriod
+    ;
+    //Generate a temp table of dates
+    LOAD Date(MinDate + IterNo()) AS "$(vDLX.Calendar.Date)",
+         MaxDate
+    WHILE MinDate + IterNo() <= Num(YearEnd(MaxDate))
+    ;
+    //Get min/max dates
+    LOAD $(vDLX.Calendar.DateFrom) as MinDate,
+         $(vDLX.Calendar.DateTo) as MaxDate
+    AutoGenerate 1
+    ; 
+
+    Join("$(vDLX.Calendar.TableName)")
+    Load Id as CompanyId,
+         OpeningMonth
+    From [$(vDLX.Config.Transform)Company.qvd] (qvd)
+    ;
+    
+    Rename Table "$(vDLX.Calendar.TableName)" to Calendar_tmp;
+
+    NoConcatenate
+    "$(vDLX.Calendar.TableName)":
+    Load *,
+         Year(AddMonths(Date(YearMonth),OpeningMonth-1)) as NaturalYear,
+         MonthName(AddMonths(Date(YearMonth),OpeningMonth-1)) as NaturalYearMonth,
+         Month(AddMonths(Date(YearMonth),OpeningMonth-1)) as NaturalMonth
+    Resident Calendar_tmp
+    ;
+
+    Drop Table Calendar_tmp;
+
+EndSub

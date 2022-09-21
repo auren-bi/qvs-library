@@ -1,0 +1,27 @@
+//
+/**
+* @Description Subfunction DropTable will add the tag hidden to each field within a table. after that this fields only will be visible when "show system fields" is checked on.
+* @author  Alberto Rodríguez Bernárdez
+* @DateYMD 20170104
+* @Version 1.0
+**/
+SUB DropTable (vDLX.toDrop,vDLX.DropTable)
+/**
+* @parameter 1 vDLX.toDrop: Flag to enable dropping
+* @parameter 2 vDLX.DropTable: Table name that will be dropped
+*/
+	IF $(vDLX.toDrop) THEN 
+		//CALL Log('DROP','$(vDLX.DropTable)','Se elimina la tabla $(vDLX.DropTable)') ;
+		Drop Table "$(vDLX.DropTable)"; 
+		CALL Log('DROP','$(vDLX.DropTable)','Tabla $(vDLX.DropTable) eliminada') ;
+	ELSE
+		CALL Log('DROP','$(vDLX.DropTable)','No se elimina la tabla $(vDLX.DropTable)') ;
+	ENDIF	
+
+/**  Example of use **/
+/**  Call to subfunction DropTable(Flag,'Table');
+	CALL DropTable($(vDLX.Document.DropTables),'$(vDLX.TableName)');
+	CALL DropTable(-1,'$(vDLX.TableName)');
+	CALL DropTable(0,'$(vDLX.TableName)');
+*/
+ENDSUB //End Subfunction DropTable

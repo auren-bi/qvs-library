@@ -1,0 +1,115 @@
+
+/**
+* @Description Subfunction LOG crea un log.
+* @author  Alberto Rodríguez
+* @DateYMD 20150324
+* @Version 1.1
+*/
+
+// Add this commented part to Script
+/******	  	
+IF len('$(vDLX.FolderPath.StoreLog)')=0 THEN // si no existe la variable la creamos
+	LET vDLX.FolderPath.StoreLog = '$(vDLX.FolderPath.Project)Support\Logs\';
+ENDIF
+
+LET vDLX.Log.TableName = 'QV_LOG';// in case customization were needed	
+*/
+
+IF len('$(vDLX.Log.TableName)')=0 THEN // si no existe la variable la creamos
+	LET vDLX.Log.TableName = 'QV_LOG';// in case Log.TableName weren't created	
+ENDIF
+
+LET vDLX.Log.TimeStamp = Now(1); // first timestamp for starting count
+LET vDLX.Log.TimeStampYYYYMMDD = date(Now(1),'YYYYMMDDHHmmss'); // in case to add timestamp to log file
+LET vDLX.Log.StoreFile = '$(vDLX.FolderPath.StoreLog)$(vDLX.Document.Title)'; //simple name for log file
+//LET vDLX.Log.StoreFile = if($(vDLX.Document.TestMode),'$(vDLX.FolderPath.StoreLog)$(vDLX.Document.Name)_$(vDLX.Log.TimeStampYYYYMMDD)','$(vDLX.FolderPath.StoreLog)'&'$(vDLX.Document.Name)');
+
+
+
+
+[$(vDLX.Log.TableName)]: LOAD 1 as [$(vDLX.Log.TableName).Order] AutoGenerate 0 ;
+/*========================================
+LOG
+======================= dlx function ====*/
+SUB Log (vDLX.Log.Category,vDLX.Log.ETLTable,vDLX.Log.Msg,vDLX.Log.SourceTable)
+
+/**
+* @param1 vDLX.Log.Category: Categoría del log, cuando sea Exit se guardará el log....
+* @param2 vDLX.Log.ETLTable: Tabla que se utilizará para registrar el número de registros y el número de campos.
+* @param3 vDLX.Log.Msg: mensaje descriptivo. 
+*/
+/* Parametros de ejemplo
+* CALL Log('START','$(vDLX.Log.TableName)','Creación tabla de logs');
+* CALL Log('EXIT','$(vDLX.Log.TableName)','Fin de proceso y guardado tabla logs en LOGS\$(vDLX.Document.Name).csv');
+*/
+
+	IF len('$(vDLX.Log.TimeStamp)')=0 THEN // si no existe la variable la creamos
+		LET vDLX.Log.TimeStamp = Now(1); // first timestamp for starting count
+	ENDIF
+
+	IF len('$(vDLX.Log.SourceTable)')=0 THEN // si no existe la variable la creamos
+		LET vDLX.Log.SourceTable = ' '; 
+	ENDIF
+	
+	IF LEN('$(vDLX.Log.Category)')=0 THEN ; Let vDLX.Log.Category = 'LOG' ; ENDIF ;	
+	IF LEN('$(vDLX.Log.ETLTable)')=0 THEN ; Let vDLX.Log.ETLTable = TableName(NoOfTables()-1); ENDIF ;		
+	IF LEN('$(vDLX.Log.Msg)')=0 THEN ; Let vDLX.Log.Msg = 'Sin comentario'; ENDIF ;
+	LET vDLX.Log.TraceMsg = '$(vDLX.Log.TableName) << $(vDLX.Log.Category) : $(vDLX.Log.Msg)' ;
+	TRACE $(vDLX.Log.TraceMsg) ;	// Put message in the document log 
+	LET vDLX.Log.PreviousTimeStamp = vDLX.Log.TimeStamp;
+	LET vDLX.Log.TimeStamp = Now(1);
+
+		Concatenate($(vDLX.Log.TableName))
+		[$(vDLX.Log.TableName)]:
+		LOAD
+			RowNo() AS $(vDLX.Log.TableName).Order,
+			DocumentName() As $(vDLX.Log.TableName).Source_Document,
+			Timestamp#('$(vDLX.Log.PreviousTimeStamp)') AS $(vDLX.Log.TableName).StartTime,
+			Timestamp#('$(vDLX.Log.TimeStamp)') AS $(vDLX.Log.TableName).EndTime,
+			Interval(Timestamp#('$(vDLX.Log.TimeStamp)')-Timestamp#('$(vDLX.Log.PreviousTimeStamp)')) as $(vDLX.Log.TableName).IntervalTime,
+			'$(vDLX.Log.Category)' As $(vDLX.Log.TableName).Category,
+			'$(vDLX.Log.Msg)' as $(vDLX.Log.TableName).Message,	
+			'$(vDLX.Log.ETLTable)' as $(vDLX.Log.TableName).ETLTable,
+			'$(vDLX.Log.SourceTable)' as $(vDLX.Log.TableName).SourceTable,
+			NoOfFields('$(vDLX.Log.ETLTable)') AS $(vDLX.Log.TableName).NoOfFields,	
+			NoOfRows('$(vDLX.Log.ETLTable)') AS $(vDLX.Log.TableName).NoOfRows,
+			'$(ScriptErrorCount)' as $(vDLX.Log.TableName).ScriptErrorCount,		
+			'$(ScriptErrorList)' as $(vDLX.Log.TableName).ScriptErrorList,
+			'$(ScriptError)' as $(vDLX.Log.TableName).ScriptError,		
+			'$(ScriptErrorDetails)' as $(vDLX.Log.TableName).ScriptErrorDetails
+		AUTOGENERATE (1);
+
+	IF vDLX.Log.Category='START' THEN
+		LET vDLX.Document.StartProcess = Now(1);
+	ENDIF
+	
+	IF vDLX.Log.Category='EXIT' THEN
+		
+		LET vDLX.Document.EndProcess = Now(1);
+		
+		// TRACE Auren Support version;
+		// LET vDLX.ASV.Result='';
+		// CALL AurenSupportVersion;
+		// CALL Log('CALL','AurenSupportVersion','Resultado de llamada a webservice: $(vDLX.ASV.Result)');
+	
+		TRACE Storing Log;
+		STORE QV_LOG INTO '$(vDLX.Config.AppDir)99.Support\$(vDLX.Document.Title).qvd' (qvd);
+		CALL Log('STORE','$(vDLX.Log.TableName)','Se guarda la tabla de logs en $(vDLX.Config.AppDir)99.Support\$(vDLX.Document.Title).qvd');
+				
+	ENDIF
+	
+	LET ScriptErrorList =;
+	LET ScriptErrorCount=0;
+	LET ScriptErrorDetails =;
+	LET ScriptError =;
+	LET vDLX.Log.TraceMsg = null();
+	LET vDLX.Log.Category = null();
+	LET vDLX.Log.ETLTable = null();
+	LET vDLX.Log.Msg = null();
+
+ENDSUB
+
+
+// CALL Log('START','$(vDLX.Log.TableName)','Creación tabla de logs');
+// CALL Log('EXIT','$(vDLX.Log.TableName)','Fin de proceso y guardado tabla logs en LOGS\$(vDLX.Document.Name).csv');
+

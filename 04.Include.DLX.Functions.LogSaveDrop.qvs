@@ -1,0 +1,27 @@
+//
+/**
+* @Description Subfunction LogSaveDrop Subfunction for Save Logging and Drop table
+* @author  Alberto Rodríguez
+* @DateYMD 20170501
+* @Version 1.0
+*/
+
+/*========================================
+LogSaveDrop
+======================= dlx function ====*/
+SUB LogSaveDrop (vDLX.TableName,vDLX.FolderPath,vDLX.QVDName,vDLX.Comment,vDLX.SourceTable) //Subfunction for Log, Save, Log, Drop and Log table
+/**
+* @param1 vDLX.TableName: Tabla sobre la que se realiza la operación de guardar, log y drop
+* @param2 vDLX.FolderPath: destino del store
+* @param3 vDLX.Document.DropTables: se borrará la tabla?
+*/
+/* Parametros de ejemplo
+* CALL LogSaveDrop('$(vDLX.TableName)','$(vDLX.FolderPath)',$(vDLX.Document.DropTables));
+* CALL LogSaveDrop('$(vDLX.TableName)','$(vDLX.FolderPath)',0);
+* CALL LogSaveDrop('QV_LOG','$(vDLX.FolderPath)',0);
+*/
+	Call Log('LOAD','$(vDLX.TableName)','$(vDLX.Comment)','$(vDLX.SourceTable)');
+	Call SaveDrop('$(vDLX.TableName)','$(vDLX.FolderPath)','$(vDLX.QVDName)');
+ENDSUB
+
+// CALL LogSaveDrop('$(vDLX.TableName)','$(vDLX.FolderPath)','$(vDLX.QVDName)','$(vDLX.Comment)','$(vDLX.SourceTable)');

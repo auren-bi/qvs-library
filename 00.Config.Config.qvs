@@ -1,0 +1,40 @@
+/* CONFIGURACIONES GENERALES ***************************************************/
+//Sistema del cliente
+Set vDLX.Config.System = SAP_B1;
+//Si estamos instalando en QS SaaS o en QS Enterprise
+Set vDLX.Config.SaaS = 1;
+//Cadena de conexión a la base de datos
+Set vDLX.Config.ConnStr = LIB CONNECT TO 'DLX.AUREN.SAP_B1';
+//Propietario de la base de datos
+Set vDLX.Config.DBOwner = 'dbo';
+
+/* CONFIGURACIONES DIRECTORIOS *************************************************/
+//Directorio o espacio para los ficheros de configuración
+Let vDLX.Config.Config = if($(vDLX.Config.SaaS),'lib://' & if(DocumentName()='$(vDLX.CloudPublishedAppId)','$(vDLX.CloudProcessSpace)','') & ':DataFiles/00.Config.','$(vDLX.Config.AppDir)00.Config/');
+//Directorio o espacio para QVDs de extracción
+Let vDLX.Config.Extract = if($(vDLX.Config.SaaS),'lib://:DataFiles/01.Extract.','$(vDLX.Config.AppDir)01.Extract/');
+//Directorio o espacio para QVDs de transformación
+Let vDLX.Config.Transform = if($(vDLX.Config.SaaS),'lib://:DataFiles/02.Transform.','$(vDLX.Config.AppDir)02.Transform/');
+//Directorio o espacio para QVDs de modelo de datos
+Let vDLX.Config.Model = if($(vDLX.Config.SaaS),'lib://' & if(DocumentName()='$(vDLX.CloudPublishedAppId)','$(vDLX.CloudProcessSpace)','') & ':DataFiles/03.Model.','$(vDLX.Config.AppDir)03.Model/');
+//Directorio o espacio para las sub stándar
+Let vDLX.Config.Include = if($(vDLX.Config.SaaS),'lib://:DataFiles/04.Include.','$(vDLX.Config.AppDir)04.Include/');
+//Directorio o espacio para la configuración de cliente
+Let vDLX.Config.UserConfig = if($(vDLX.Config.SaaS),'lib://:DataFiles/05.UserConfig.','$(vDLX.Config.AppDir)05.UserConfig/');
+//Directorio o espacio para los ficheros de ChangeLog
+Let vDLX.Config.ChangeLog = if($(vDLX.Config.SaaS),'lib://:DataFiles/06.ChangeLog.','$(vDLX.Config.AppDir)06.ChangeLog/');
+//Directorio o espacio para la importación de datos en ficheros
+Let vDLX.Config.Import = if($(vDLX.Config.SaaS),'lib://:DataFiles/07.Import.','$(vDLX.Config.AppDir)07.Import/');
+//Directorio o espacio para contenido de la App
+Let vDLX.Config.Content = if($(vDLX.Config.SaaS),'lib://:DataFiles/08.Content.','$(vDLX.Config.AppDir)08.Content/');
+
+
+/* FUNCIONES Y CONFIGURACIONES DESDE EXCEL *************************************/
+$(Include=[$(vDLX.Config.Config)ExcelConfig.qvs]);
+$(Must_Include=[$(vDLX.Config.Include)DLX.Functions.Log.qvs]);
+$(Must_Include=[$(vDLX.Config.Include)DLX.Functions.DropTable.qvs]);
+$(Must_Include=[$(vDLX.Config.Include)DLX.Functions.LogSaveDrop.qvs]);
+$(Must_Include=[$(vDLX.Config.Include)DLX.Functions.SaveDrop.qvs]);
+$(Must_Include=[$(vDLX.Config.Include)DLX.Functions.LogSave.qvs]);
+$(Must_Include=[$(vDLX.Config.Include)DLX.Functions.Calendar.qvs]);
+

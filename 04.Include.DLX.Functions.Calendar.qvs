@@ -1,0 +1,26 @@
+SUB Calendar(vDLX.Calendar.DateFrom,vDLX.Calendar.DateTo,vDLX.Calendar.TableName)
+	
+    "$(vDLX.Calendar.TableName)":
+    Load Date("Date") as Date, 
+         Week("Date") As Week, 
+         Year("Date") As Year, 
+         Month("Date") As Month, 
+	    MonthName("Date") as YearMonth,
+	    WeekName("Date") as YearWeek,
+         Day("Date") As Day, 
+         'Q' & Ceil(Month("Date") / 3) AS Quarter, 
+         WeekDay("Date") as WeekDay,
+         -InYearToDate("Date",Today(),Year("Date")-Year(Today())) as YTD
+    ;
+    //Generate a temp table of dates
+    LOAD Date(MinDate + IterNo() - 1) AS "Date",
+         MaxDate
+    WHILE MinDate + IterNo() -1 <= Num(MaxDate)
+    ;
+    //Get min/max
+    LOAD $(vDLX.Calendar.DateFrom) as MinDate,
+         $(vDLX.Calendar.DateTo) as MaxDate
+    AutoGenerate 1
+    ; 
+		
+EndSub;
